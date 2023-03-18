@@ -1,4 +1,4 @@
-# Topaz Specification - Syntax - Classes & Structures
+# Topaz Specification - Syntax :: Classes & Structures
 
 ## Classes
 

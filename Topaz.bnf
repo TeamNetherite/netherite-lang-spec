@@ -1,0 +1,116 @@
+{
+    tokens=[
+        SEMI=';'
+        EQ='='
+        LPAR='('
+        RPAR=')'
+        LCUR='{'
+        RCUR='}'
+        COLON=':'
+        COMMA=','
+        AT='@'
+        SPACE = 'regexp:[\s\t]+'
+        REF='&'
+        VOID='()'
+
+        // keywords
+        LET='let'
+        MUT='mut'
+        FUNC='func'
+        DEINIT='deinit'
+        MAIN='main'
+        LF='regexp:((\r?)\n)+'
+
+        // visibility
+        PUB='public'
+        PRIV='private'
+
+        NOPE='nope'
+        SOME='some'
+        MAYBE='maybe'
+
+        ident_='regexp:[a-zA-Z](\w+)?'
+        comment_='regexp://.*'
+
+        op_add='+'
+        op_sub='-'
+    ]
+}
+
+file ::= item*
+
+ident ::= ident_ | 'regexp:[a-zA-Z]'
+
+comment ::= comment_
+visibility ::= (PUB|PRIV)
+
+item ::= (func_decl|comment)
+
+keyword ::= (FUNC|LET|MUT|PUB|PRIV|NOPE|SOME|MAYBE)
+
+block ::= LCUR ((stmt SEMI)*)? RCUR
+
+func_decl_arg ::= type ident (EQ expr)?
+func_decl ::= visibility? FUNC (ident|MAIN) ((LPAR func_decl_arg (COMMA func_decl_arg)* RPAR)|VOID) block
+
+stmt ::= (func_call|let_stmt)
+let_stmt ::= LET MUT? ident EQ expr;
+func_call_arg ::= (ident EQ)?expr;
+func_call ::= ident ((LPAR func_call_arg* RPAR)|VOID)
+
+expr ::= (expr_|maybe_expr)
+expr_ ::= (number_lit|float_lit|string_lit)
+
+maybe_expr ::= (NOPE|(SOME expr_))
+
+type ::= (primitive_type|reference_type|maybe_type|ident)
+primitive_type ::= ('String'|'int'|'byte')
+reference_type ::= REF type
+maybe_type ::= MAYBE type
+
+number_lit ::= int_lit | binary_lit | octal_lit | hex_lit
+int_lit ::= "0" | ( "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ) [ [ "_" ] decimal_digits ]
+binary_lit ::= "0" ( "b" | "B" ) [ "_" ] binary_digits
+octal_lit ::= "0" [ "o" | "O" ] [ "_" ] octal_digits
+hex_lit ::= "0" ( "x" | "X" ) [ "_" ] hex_digits
+
+decimal_digits ::= decimal_digit { [ "_" ] decimal_digit }
+binary_digits ::= binary_digit { [ "_" ] binary_digit }
+octal_digits ::= octal_digit { [ "_" ] octal_digit }
+hex_digits ::= hex_digit { [ "_" ] hex_digit }
+
+decimal_digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+binary_digit ::= "0" | "1"
+octal_digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
+hex_digit ::= decimal_digit | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F"
+
+float_lit ::= decimal_float_lit | hex_float_lit
+decimal_float_lit ::= decimal_digits "." [ decimal_digits ] [ decimal_exponent ] |
+                        decimal_digits decimal_exponent |
+                        "." decimal_digits [ decimal_exponent ]
+decimal_exponent ::= ( "e" | "E" ) [ "+" | "-" ] decimal_digits
+
+hex_float_lit ::= "0" ( "x" | "X" ) hex_mantissa
+hex_mantissa ::= [ "_" ] hex_digits "." [ hex_digits ] |
+                   [ "_" ] hex_digits |
+                   "." hex_digits
+
+decimal_digits ::= decimal_digit { [ "_" ] decimal_digit }
+hex_digits ::= hex_digit { [ "_" ] hex_digit }
+
+digit ::= 'regexp:\d'
+decimal_digit ::= digit
+hex_digit ::= decimal_digit | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F"
+
+unicode_char ::= 'regexp:[a-zA-Z]'
+char_lit         ::= "'" ( unicode_value | byte_value ) "'"
+unicode_value    ::= unicode_char | little_u_value | big_u_value | escaped_char
+byte_value       ::= octal_byte_value | hex_byte_value
+octal_byte_value ::= '\' octal_digit octal_digit octal_digit
+hex_byte_value   ::= '\' "x" hex_digit hex_digit
+little_u_value   ::= '\' "u" hex_digit hex_digit hex_digit hex_digit
+big_u_value      ::= '\' "U" hex_digit hex_digit hex_digit hex_digit
+                           hex_digit hex_digit hex_digit hex_digit
+escaped_char     ::= '\' ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | '\' | "'" | '"' )
+
+string_lit             ::= '"' { unicode_value | byte_value | } '"'
