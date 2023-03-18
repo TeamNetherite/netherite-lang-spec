@@ -1,4 +1,14 @@
 {
+    parserClass="net.topazlang.topazidea.parser.TopazParser"
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+    psiClassPrefix="Topaz"
+    psiImplClassSuffix="Impl"
+    psiPackage="net.topazlang.topazidea.psi"
+    psiImplPackage="net.topazlang.topazidea.psi.impl"
+    elementTypeHolderClass="net.topazlang.topazidea.psi.TopazTypes"
+    elementTypeClass="net.topazlang.topazidea.psi.TopazElementType"
+    tokenTypeClass="net.topazlang.topazidea.psi.TopazTokenType"
+
     tokens=[
         SEMI=';'
         EQ='='
@@ -48,7 +58,7 @@ item ::= (func_decl|comment)
 
 keyword ::= (FUNC|LET|MUT|PUB|PRIV|NOPE|SOME|MAYBE)
 
-block ::= LCUR ((stmt SEMI)*)? RCUR
+block ::= LCUR ((stmt SEMI?)*)? RCUR
 
 func_decl_arg ::= type ident (EQ expr)?
 func_decl ::= visibility? FUNC (ident|MAIN) ((LPAR func_decl_arg (COMMA func_decl_arg)* RPAR)|VOID) block
