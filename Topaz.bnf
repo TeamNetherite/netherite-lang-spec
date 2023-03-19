@@ -11,6 +11,7 @@
 
     tokens=[
         SEMI=';'
+        NEQ='!='
         EQ='='
         LPAR='('
         RPAR=')'
@@ -18,10 +19,25 @@
         RCUR='}'
         COLON=':'
         COMMA=','
+        DOT='.'
         AT='@'
         SPACE = 'regexp:[\s\t]+'
         REF='&'
         VOID='()'
+        ARRR = '->'
+        PLUS='+'
+        MINUS='-'
+        AND='&'
+        OR='|'
+        LT='<'
+        GT='>'
+        MUL='*'
+        DIV='/'
+        REM='%'
+        QUESTION='?'
+        TILDE='~'
+        UNDERSCORE='_'
+        DOLLAR='$'
 
         // keywords
         LET='let'
@@ -29,6 +45,11 @@
         FUNC='func'
         DEINIT='deinit'
         MAIN='main'
+        BOOL_LITERAL='regexp:(true|false)'
+        CAST='as'
+        IF='if'
+        ELSE='else'
+
         LF='regexp:((\r?)\n)+'
 
         // visibility
@@ -40,10 +61,9 @@
         MAYBE='maybe'
 
         ident_='regexp:[a-zA-Z](\w+)?'
-        comment_='regexp://.*'
 
-        op_add='+'
-        op_sub='-'
+        BLOCK_COMMENT='regexp:/\*[^\n/]*\*/'
+        LINE_COMMENT='regexp://[^\n/]?.*'
     ]
 }
 
@@ -51,29 +71,32 @@ file ::= item*
 
 ident ::= ident_ | 'regexp:[a-zA-Z]'
 
-comment ::= comment_
+comment ::= (BLOCK_COMMENT|LINE_COMMENT)
 visibility ::= (PUB|PRIV)
 
 item ::= (func_decl|comment)
 
-keyword ::= (FUNC|LET|MUT|PUB|PRIV|NOPE|SOME|MAYBE)
+block ::= LCUR (stmt*)? RCUR
 
-block ::= LCUR ((stmt SEMI?)*)? RCUR
-
-func_decl_arg ::= type ident (EQ expr)?
-func_decl ::= visibility? FUNC (ident|MAIN) ((LPAR func_decl_arg (COMMA func_decl_arg)* RPAR)|VOID) block
+func_decl_arg ::= ident COLON type (EQ expr)?
+func_decl ::= visibility? FUNC func_ident ((LPAR func_decl_arg (COMMA func_decl_arg)* RPAR)|VOID) (ARRR type)? func_body
+func_ident ::= (ident|MAIN)
+func_body ::= ((eq_ret)|(block))
+eq_ret ::= EQ eq_ret_expr
+eq_ret_expr ::= ((expr SEMI)|(func_call))
 
 stmt ::= (func_call|let_stmt)
-let_stmt ::= LET MUT? ident EQ expr;
-func_call_arg ::= (ident EQ)?expr;
-func_call ::= ident ((LPAR func_call_arg* RPAR)|VOID)
+let_stmt ::= LET MUT? ident EQ expr SEMI
+func_call_arg ::= (ident EQ)?expr
+func_call ::= ident ((LPAR func_call_arg* RPAR)|VOID) SEMI
 
 expr ::= (expr_|maybe_expr)
-expr_ ::= (number_lit|float_lit|string_lit)
+expr_ ::= (number_lit|float_lit|string_lit|var_access)
+var_access ::= (ident)
 
 maybe_expr ::= (NOPE|(SOME expr_))
 
-type ::= (primitive_type|reference_type|maybe_type|ident)
+type ::= (primitive_type|reference_type|maybe_type|VOID|ident)
 primitive_type ::= ('String'|'int'|'byte')
 reference_type ::= REF type
 maybe_type ::= MAYBE type
